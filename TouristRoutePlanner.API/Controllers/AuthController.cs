@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TouristRoutePlanner.API.DTOs;
 using TouristRoutePlanner.API.Models;
+using TouristRoutePlanner.API.Repositories.Interfaces;
 
 namespace TouristRoutePlanner.API.Controllers
 {
@@ -11,10 +12,12 @@ namespace TouristRoutePlanner.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly UserManager<User> userManager;
+        private readonly ITokenRepository tokenRepository;
 
-        public AuthController(UserManager<User> userManager)
+        public AuthController(UserManager<User> userManager, ITokenRepository tokenRepository)
         {
             this.userManager = userManager;
+            this.tokenRepository = tokenRepository;
         }
 
         [HttpPost]
@@ -43,6 +46,34 @@ namespace TouristRoutePlanner.API.Controllers
             }
 
             return BadRequest("User registration failed.");
+        }
+
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
+        {
+            var user = await userManager.FindByEmailAsync(loginRequestDto.Username);
+
+            if (user != null)
+            {
+                var checkPasswordResult = await userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+
+                if (checkPasswordResult)
+                {
+                    var roles = await userManager.GetRolesAsync(user);
+
+                    var jwtToken = tokenRepository.CreateJWTToken(user, roles.ToList());
+
+                    var response = new LoginResponseDto
+                    {
+                        jwtToken = jwtToken
+                    };
+
+                    return Ok(response);
+                }
+            }
+
+            return BadRequest("Username or password is incorrect");
         }
     }
 }

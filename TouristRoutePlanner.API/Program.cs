@@ -5,6 +5,8 @@ using TouristRoutePlanner.API.Data;
 using TouristRoutePlanner.API.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TouristRoutePlanner.API.Repositories.Interfaces;
+using TouristRoutePlanner.API.Repositories.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,8 @@ builder.Services.AddDbContext<TouristRoutePlannerAuthDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("TouristRoutePlannerAuthConnectionString"));
 });
+
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 
 builder.Services.AddIdentityCore<User>()
     .AddRoles<IdentityRole>()
@@ -61,6 +65,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+//app.UseAuthentication();
 
 app.UseAuthorization();
 
