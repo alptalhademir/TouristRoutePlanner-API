@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TouristRoutePlanner.API.Data;
 
@@ -11,9 +12,11 @@ using TouristRoutePlanner.API.Data;
 namespace TouristRoutePlanner.API.Migrations
 {
     [DbContext(typeof(TouristRoutePlannerAuthDbContext))]
-    partial class TouristRoutePlannerAuthDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250321140834_FixDateOfBirth")]
+    partial class FixDateOfBirth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

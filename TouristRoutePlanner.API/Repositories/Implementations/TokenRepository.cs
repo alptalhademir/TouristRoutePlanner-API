@@ -32,7 +32,7 @@ namespace TouristRoutePlanner.API.Repositories.Implementations
 
             var token = new JwtSecurityToken(
                 configuration["Jwt:Issuer"],
-                configuration["Jst:Audience"],
+                configuration["Jwt:Audience"],
                 claims,
                 expires: DateTime.Now.AddMinutes(15),
                 signingCredentials: credentials);

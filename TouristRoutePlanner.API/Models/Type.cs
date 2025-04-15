@@ -2,11 +2,14 @@
 {
     public class Type
     {
-        public Guid id { get; set; }
+        public Guid Id { get; set; }
 
         public string Name { get; set; }
 
         public ICollection<PlaceType> PlaceTypes { get; set; }
             = new List<PlaceType>();
+
+        public ICollection<TravelType> TravelTypes { get; set; }
+            = new List<TravelType>();
     }
 }
