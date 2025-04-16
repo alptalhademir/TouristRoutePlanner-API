@@ -17,7 +17,6 @@
         public string City { get; set; }
         public string Title { get; set; } = "My Travel";
 
-        public Guid TravelerTypeId { get; set; }
         public TravelerType TravelerType { get; set; }
 
         public ICollection<TravelType> TravelTypes { get; set; }

@@ -58,6 +58,7 @@ builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<IPlaceRepository, PlaceRepository>();
 builder.Services.AddScoped<ITypeRepository, TypeRepository>();
 builder.Services.AddScoped<IDistanceRepository, DistanceRepository>();
+builder.Services.AddScoped<ITravelRepository, TravelRepository>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 

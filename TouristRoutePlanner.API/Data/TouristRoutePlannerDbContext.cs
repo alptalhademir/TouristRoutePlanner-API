@@ -43,13 +43,6 @@ namespace TouristRoutePlanner.API.Data
                 entity.Property(t => t.Name).IsRequired();
             });
 
-            // Configure Travel entity
-            modelBuilder.Entity<Travel>(entity =>
-            {
-                entity.HasKey(t => t.Id);
-                // Add any other Travel-specific configurations here
-            });
-
             // Configure PlaceType junction entity
             modelBuilder.Entity<PlaceType>(entity =>
             {

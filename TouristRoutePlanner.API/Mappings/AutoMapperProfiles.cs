@@ -44,6 +44,39 @@ namespace TouristRoutePlanner.API.Mappings
             CreateMap<Distance, DistanceDto>().ReverseMap();
             CreateMap<AddDistanceRequestDto, Distance>().ReverseMap();
             CreateMap<UpdateDistanceRequestDto, Distance>().ReverseMap();
+
+            CreateMap<Travel, TravelDto>()
+                .ForMember(dest => dest.SelectedTypes, opt => opt.MapFrom(src =>
+                    src.TravelTypes.Select(tt => tt.Type)))
+                .ForMember(dest => dest.SelectedPlaces, opt => opt.MapFrom(src =>
+                    src.TravelPlaces.Select(tp => tp.Place)))
+                .ReverseMap();
+
+            CreateMap<AddTravelRequestDto, Travel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.TravelTypes, opt => opt.MapFrom(src =>
+                    src.TypeIds.Select(typeId => new TravelType
+                    {
+                        TypeId = typeId
+                    })))
+                .ForMember(dest => dest.TravelPlaces, opt => opt.MapFrom(src =>
+                    src.PlaceIds.Select(placeId => new TravelPlace
+                    {
+                        PlaceId = placeId
+                    })));
+
+            CreateMap<UpdateTravelRequestDto, Travel>()
+                .ForMember(dest => dest.TravelTypes, opt => opt.MapFrom(src =>
+                    src.TypeIds.Select(typeId => new TravelType
+                    {
+                        TypeId = typeId
+                    })))
+                .ForMember(dest => dest.TravelPlaces, opt => opt.MapFrom(src =>
+                    src.PlaceIds.Select(placeId => new TravelPlace
+                    {
+                        PlaceId = placeId
+                    })));
+
         }
     }
 }
