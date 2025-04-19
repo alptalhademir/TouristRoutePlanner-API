@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TouristRoutePlanner.API.CustomActionFilters;
@@ -9,6 +10,7 @@ namespace TouristRoutePlanner.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class DistanceController : ControllerBase
     {
         private readonly IMapper mapper;

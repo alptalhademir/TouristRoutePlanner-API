@@ -9,6 +9,8 @@ using TouristRoutePlanner.API.Repositories.Interfaces;
 using TouristRoutePlanner.API.Repositories.Implementations;
 using TouristRoutePlanner.API.Mappings;
 using Microsoft.OpenApi.Models;
+using TouristRoutePlanner.API.Services.Interfaces;
+using TouristRoutePlanner.API.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +62,8 @@ builder.Services.AddScoped<ITypeRepository, TypeRepository>();
 builder.Services.AddScoped<IDistanceRepository, DistanceRepository>();
 builder.Services.AddScoped<ITravelRepository, TravelRepository>();
 
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
 builder.Services.AddIdentityCore<User>()
@@ -77,6 +81,7 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequireUppercase = false;
     options.Password.RequireLowercase = false;
     options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedEmail = true;
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
