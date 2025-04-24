@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using TouristRoutePlanner.API.DTOs;
@@ -16,13 +17,15 @@ namespace TouristRoutePlanner.API.Controllers
         private readonly UserManager<User> userManager;
         private readonly ITokenRepository tokenRepository;
         private readonly IEmailService emailService;
+        private readonly IMapper mapper;
 
         public AuthController(UserManager<User> userManager, ITokenRepository tokenRepository,
-            IEmailService emailService)
+            IEmailService emailService, IMapper mapper)
         {
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
             this.emailService = emailService;
+            this.mapper = mapper;
         }
 
         [HttpPost]
@@ -50,11 +53,11 @@ namespace TouristRoutePlanner.API.Controllers
 
                     await emailService.SendEmailConfirmationAsync(user.Email, confirmationToken);
 
-                    return Ok("User was registered. Please login.");
+                    return Ok(new { message = "User was registered. Please confirm your email." });
                 }
             }
 
-            return BadRequest("User registration failed.");
+            return BadRequest(new { message = "User registration failed." });
         }
 
         [HttpPost]
@@ -80,14 +83,15 @@ namespace TouristRoutePlanner.API.Controllers
 
                     var response = new LoginResponseDto
                     {
-                        jwtToken = jwtToken
+                        jwtToken = jwtToken,
+                        User = mapper.Map<UserDto>(user)
                     };
 
                     return Ok(response);
                 }
             }
 
-            return BadRequest("Username or password is incorrect");
+            return BadRequest(new { message = "Username or password is incorrect" });
         }
 
         [HttpPost]
@@ -98,7 +102,7 @@ namespace TouristRoutePlanner.API.Controllers
             if (user == null)
             {
                 // Return OK even if user doesn't exist to prevent email enumeration
-                return Ok("If your email is registered, you will receive a password reset code.");
+                return Ok(new { message = "If your email is registered, you will receive a password reset code." });
             }
 
             // Generate password reset token
@@ -108,11 +112,11 @@ namespace TouristRoutePlanner.API.Controllers
             try
             {
                 await emailService.SendPasswordResetEmailAsync(user.Email, token);
-                return Ok("Password reset code has been sent to your email.");
+                return Ok(new { message = "Password reset code has been sent to your email." });
             }
             catch (Exception)
             {
-                return StatusCode(500, "Error sending password reset email.");
+                return StatusCode(500, new { message = "Error sending password reset email." });
             }
         }
 
@@ -123,7 +127,7 @@ namespace TouristRoutePlanner.API.Controllers
             var user = await userManager.FindByEmailAsync(resetPasswordRequestDto.Email);
             if (user == null)
             {
-                return BadRequest("Invalid request.");
+                return BadRequest(new { message = "Invalid request." });
             }
 
             var result = await userManager.ResetPasswordAsync(
@@ -133,11 +137,11 @@ namespace TouristRoutePlanner.API.Controllers
 
             if (result.Succeeded)
             {
-                return Ok("Password has been reset successfully.");
+                return Ok(new { message = "Password has been reset successfully." });
             }
 
             var errors = result.Errors.Select(e => e.Description);
-            return BadRequest(new { Errors = errors });
+            return BadRequest(new { message = "Password reset failed", Errors = errors });
         }
 
         [HttpPost]
@@ -147,21 +151,21 @@ namespace TouristRoutePlanner.API.Controllers
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                return BadRequest("Invalid email.");
+                return BadRequest(new { message = "Invalid email" });
             }
 
             if (user.EmailConfirmed)
             {
-                return BadRequest("Email already confirmed");
+                return BadRequest(new { message = "Email already confirmed" });
             }
 
             var result = await userManager.ConfirmEmailAsync(user, request.Token);
             if (result.Succeeded)
             {
-                return Ok("Email has been confirmed successfully.");
+                return Ok(new { message = "Email has been confirmed successfully" });
             }
 
-            return BadRequest("Email confirmation failed");
+            return BadRequest(new { message = "Email confirmation failed" });
         }
 
     }

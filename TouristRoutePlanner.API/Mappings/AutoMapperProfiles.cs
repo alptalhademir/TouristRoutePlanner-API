@@ -76,6 +76,7 @@ namespace TouristRoutePlanner.API.Mappings
                     {
                         PlaceId = placeId
                     })));
+            CreateMap<User, UserDto>().ReverseMap();
 
         }
     }
