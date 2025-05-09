@@ -73,7 +73,9 @@ builder.Services.AddScoped<ITypeRepository, TypeRepository>();
 builder.Services.AddScoped<IDistanceRepository, DistanceRepository>();
 builder.Services.AddScoped<ITravelRepository, TravelRepository>();
 
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRouteOptimizationService, RouteOptimizationService>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
@@ -133,6 +135,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 

@@ -39,6 +39,14 @@ namespace TouristRoutePlanner.API.Repositories.Implementations
                 .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
         }
 
+        public async Task<Travel?> GetByIdWithPlacesAsync(Guid travelId, Guid userId)
+        {
+            return await dbContext.Travels
+                .Include(t => t.TravelPlaces)
+                    .ThenInclude(tp => tp.Place)
+                .FirstOrDefaultAsync(t => t.Id == travelId && t.UserId == userId);
+        }
+
         public async Task<Travel> CreateAsync(Guid userId, Travel travel)
         {
             travel.UserId = userId;
