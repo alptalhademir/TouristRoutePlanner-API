@@ -133,5 +133,80 @@ namespace TouristRoutePlanner.API.Services.Interfaces
 
             throw new FormatException($"Invalid distance format: {distance}");
         }
+
+        // Alternative method to optmize route
+        public async Task<List<PathResponseDto>> AlternativeOptimizePathAsync(
+            Guid travelId, Guid userId, double[] userLocation, 
+            OptimizationConfig config)
+        {
+            // Get travel with places
+            var travel = await travelRepository.GetByIdWithPlacesAsync(travelId, userId);
+            if (travel == null)
+                throw new KeyNotFoundException("Travel not found");
+
+            // Convert places to attractions with additional metadata
+            var attractions = travel.TravelPlaces.Select((tp, index) => new AttractionDto
+            {
+                Id = index,
+                Name = tp.Place.DisplayName,
+                Score = tp.Place.Rating * 2, // Convert to 10-point scale
+                Budget = CalculateEstimatedBudget(tp.Place),
+                Time = EstimateVisitTime(tp.Place),
+                Location = new double[] { tp.Place.Latitude, tp.Place.Longitude },
+                Category = tp.Place.PlaceTypes.FirstOrDefault()?.Type.Name ?? "unknown"
+            }).ToList();
+
+            // Create the request using places from travel
+            var pathRequest = new PathOptimizationRequestDto
+            {
+                Attractions = attractions,
+                UserLocation = userLocation,
+                MaxBudget = config.MaxBudget,
+                MaxTime = config.MaxTime,
+                RequiredCategory = config.RequiredCategory,
+                MaxAttractions = config.MaxAttractions
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                WriteIndented = true
+            };
+
+            var response = await httpClient.PostAsJsonAsync(
+                $"{optimizationApiUrl}/spea2",
+                pathRequest,
+                jsonOptions);
+
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<List<PathResponseDto>>();
+        }
+
+        private double CalculateEstimatedBudget(Place place)
+        {
+            return place.PriceLevel switch
+            {
+                "PRICE_LEVEL_FREE" => 0,
+                "PRICE_LEVEL_INEXPENSIVE" => 10,
+                "PRICE_LEVEL_MODERATE" => 25,
+                "PRICE_LEVEL_EXPENSIVE" => 50,
+                "PRICE_LEVEL_VERY_EXPENSIVE" => 100,
+                _ => 20
+            };
+        }
+
+        private double EstimateVisitTime(Place place)
+        {
+            var type = place.PlaceTypes.FirstOrDefault()?.Type.Name;
+            return type switch
+            {
+                "museum" => 120, // 2 hours
+                "park" => 60,    // 1 hour
+                "restaurant" => 90, // 1.5 hours
+                _ => 60 // default 1 hour
+            };
+        }
+
     }
 }

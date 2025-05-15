@@ -82,10 +82,12 @@ namespace TouristRoutePlanner.API.Controllers
                     var roles = await userManager.GetRolesAsync(user);
 
                     var jwtToken = tokenRepository.CreateJWTToken(user, roles.ToList());
+                    var refreshToken = await tokenRepository.CreateRefreshTokenAsync(Guid.Parse(user.Id));
 
                     var response = new LoginResponseDto
                     {
                         jwtToken = jwtToken,
+                        refreshToken = refreshToken,
                         User = mapper.Map<UserDto>(user)
                     };
 
@@ -95,6 +97,61 @@ namespace TouristRoutePlanner.API.Controllers
 
             return BadRequest(new { message = "Username or password is incorrect" });
         }
+
+        [HttpPost]
+        [Route("RefreshToken")]
+        [Authorize]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto requestDto)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(requestDto.RefreshToken) || string.IsNullOrEmpty(userId))
+            {
+                return BadRequest(new { message = "Refresh token and user ID are required." });
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return BadRequest(new { message = "Invalid user" });
+            }
+
+            // Get roles to generate new JWT
+            var roles = await userManager.GetRolesAsync(user);
+            var newJwtToken = tokenRepository.CreateJWTToken(user, roles.ToList());
+
+            // Get new refresh token
+            var newRefreshToken = await tokenRepository.RefreshTokenAsync(
+                Guid.Parse(userId),
+                requestDto.RefreshToken);
+
+            if (newRefreshToken == null)
+            {
+                return BadRequest(new { message = "Invalid or expired refresh token" });
+            }
+
+            var response = new RefreshTokenResponseDto
+            {
+                JwtToken = newJwtToken,
+                RefreshToken = newRefreshToken
+            };
+
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Route("Logout")]
+        public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto requestDto)
+        {
+            if (string.IsNullOrEmpty(requestDto.RefreshToken))
+            {
+                return BadRequest(new { message = "Refresh token is required" });
+            }
+
+            await tokenRepository.RevokeRefreshTokenAsync(requestDto.RefreshToken);
+            return Ok(new { message = "Successfully logged out" });
+        }
+
 
         [HttpPost]
         [Route("ForgotPassword")]

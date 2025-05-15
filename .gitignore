@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /TouristRoutePlanner.API/Data/DbInitializer.cs
+/TouristRoutePlanner.API/Properties/ServiceDependencies/app-touristrouteplanner-dev - Zip Deploy
+/TouristRoutePlanner.API/Properties/serviceDependencies.json
+/TouristRoutePlanner.API/Properties/serviceDependencies.app-touristrouteplanner-dev - Zip Deploy.json

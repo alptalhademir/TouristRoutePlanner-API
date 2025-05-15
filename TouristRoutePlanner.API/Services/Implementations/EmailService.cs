@@ -17,6 +17,8 @@ namespace TouristRoutePlanner.API.Services.Implementations
 
         public async Task SendPasswordResetEmailAsync(string email, string resetToken)
         {
+            var encodedEmail = Uri.EscapeDataString(email);
+            var encodedResetToken = Uri.EscapeDataString(resetToken);
             var client = new EmailClient(connectionString);
 
             var emailMessage = new EmailMessage(
@@ -27,11 +29,14 @@ namespace TouristRoutePlanner.API.Services.Implementations
                     <html>
                         <body>
                             <h2>Reset Your Password</h2>
-                            <p>Your password reset code is:</p>
-                            <h3 style='background-color: #f0f0f0; padding: 10px; font-family: monospace; text-align: center;'>{resetToken}</h3>
-                            <p>Enter this code in the app to reset your password.</p>
+                            <p>To reset your password, please click the link below:</p>
+                            <h3 style='background-color: #f0f0f0; padding: 10px; font-family: monospace; text-align: center;'>
+                                <a href='http://localhost:3000/reset-password?email={encodedEmail}&code={encodedResetToken}' target='_blank'>
+                                    Reset Password
+                                </a>
+                            </h3>
                             <p>If you didn't request this, please ignore this email.</p>
-                            <p>This code will expire in 15 minutes.</p>
+                            <p>This link will expire in 15 minutes.</p>
                         </body>
                     </html>"
                 },
@@ -43,6 +48,8 @@ namespace TouristRoutePlanner.API.Services.Implementations
 
         public async Task SendEmailConfirmationAsync(string email, string confirmationToken)
         {
+            var encodedEmail = Uri.EscapeDataString(email);
+            var encodedConfirmationToken = Uri.EscapeDataString(confirmationToken);
             var client = new EmailClient(connectionString);
 
             var emailMessage = new EmailMessage(
@@ -52,10 +59,13 @@ namespace TouristRoutePlanner.API.Services.Implementations
                     Html = $@"
                     <html>
                         <body>
-                            y>
                             <h2>Welcome to Tourist Route Planner!</h2>
-                            <p>Please confirm your email address by entering this code:</p>
-                            <h3 style='background-color: #f0f0f0; padding: 10px; font-family: monospace; text-align: center;'>{confirmationToken}</h3>
+                            <p>Please confirm your email address by clicking the link below:</p>
+                            <h3 style='background-color: #f0f0f0; padding: 10px; font-family: monospace; text-align: center;'>
+                                <a href='http://localhost:3000/confirm-email?email={encodedEmail}&code={encodedConfirmationToken}' target='_blank'>
+                                    Confirm Email
+                                </a>
+                            </h3>
                             <p>If you didn't create an account, please ignore this email.</p>
                         </body>
                     </html>"

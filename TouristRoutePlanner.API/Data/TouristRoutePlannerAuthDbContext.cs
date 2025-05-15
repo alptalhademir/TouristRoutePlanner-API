@@ -10,6 +10,7 @@ namespace TouristRoutePlanner.API.Data
         public TouristRoutePlannerAuthDbContext(DbContextOptions<TouristRoutePlannerAuthDbContext> options): base(options)
         {
         }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -37,6 +38,15 @@ namespace TouristRoutePlanner.API.Data
             };
 
             builder.Entity<IdentityRole>().HasData(roles);
+
+            builder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(rt => rt.Id);
+                entity.HasIndex(rt => rt.Token).IsUnique();
+                entity.Property(rt => rt.UsedCount).HasDefaultValue(0);
+                entity.Property(rt => rt.UserId).IsRequired();
+                entity.Property(rt => rt.ExpiryTime).IsRequired();
+            });
         }
 
     }
