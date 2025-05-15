@@ -141,6 +141,7 @@ namespace TouristRoutePlanner.API.Controllers
 
         [HttpPost]
         [Route("Logout")]
+        [Authorize]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto requestDto)
         {
             if (string.IsNullOrEmpty(requestDto.RefreshToken))
