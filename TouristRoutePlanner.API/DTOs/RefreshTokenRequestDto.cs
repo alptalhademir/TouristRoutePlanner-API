@@ -6,5 +6,7 @@ namespace TouristRoutePlanner.API.DTOs
     {
         [Required]
         public string RefreshToken { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
     }
 }

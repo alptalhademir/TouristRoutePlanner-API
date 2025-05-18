@@ -100,17 +100,14 @@ namespace TouristRoutePlanner.API.Controllers
 
         [HttpPost]
         [Route("RefreshToken")]
-        [Authorize]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto requestDto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(requestDto.RefreshToken) || string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(requestDto.RefreshToken) || (requestDto.UserId == Guid.Empty))
             {
                 return BadRequest(new { message = "Refresh token and user ID are required." });
             }
 
-            var user = await userManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(requestDto.UserId.ToString());
             if (user == null)
             {
                 return BadRequest(new { message = "Invalid user" });
@@ -122,7 +119,7 @@ namespace TouristRoutePlanner.API.Controllers
 
             // Get new refresh token
             var newRefreshToken = await tokenRepository.RefreshTokenAsync(
-                Guid.Parse(userId),
+                requestDto.UserId,
                 requestDto.RefreshToken);
 
             if (newRefreshToken == null)
