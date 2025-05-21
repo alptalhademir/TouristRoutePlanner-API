@@ -134,53 +134,93 @@ namespace TouristRoutePlanner.API.Services.Interfaces
             throw new FormatException($"Invalid distance format: {distance}");
         }
 
-        // Alternative method to optmize route
-        public async Task<List<PathResponseDto>> AlternativeOptimizePathAsync(
-            Guid travelId, Guid userId, double[] userLocation, 
-            OptimizationConfig config)
+        public async Task<List<PathGenerationResponseDto>> GeneratePathsAsync(Guid travelId,
+            Guid userId, PathGenerationRequestDto request)
         {
             // Get travel with places
             var travel = await travelRepository.GetByIdWithPlacesAsync(travelId, userId);
             if (travel == null)
                 throw new KeyNotFoundException("Travel not found");
 
-            // Convert places to attractions with additional metadata
-            var attractions = travel.TravelPlaces.Select((tp, index) => new AttractionDto
+            // If attractions not specified, convert places from travel
+            if (request.Attractions == null || !request.Attractions.Any())
             {
-                Id = index,
-                Name = tp.Place.DisplayName,
-                Score = tp.Place.Rating * 2, // Convert to 10-point scale
-                Budget = CalculateEstimatedBudget(tp.Place),
-                Time = EstimateVisitTime(tp.Place),
-                Location = new double[] { tp.Place.Latitude, tp.Place.Longitude },
-                Category = tp.Place.PlaceTypes.FirstOrDefault()?.Type.Name ?? "unknown"
-            }).ToList();
+                request.Attractions = travel.TravelPlaces.Select((tp, index) => new AttractionDto
+                {
+                    Id = index,
+                    Name = tp.Place.DisplayName,
+                    Score = tp.Place.Rating,
+                    Budget = CalculateEstimatedBudget(tp.Place),
+                    Time = EstimateVisitTime(tp.Place),
+                    Location = new double[] { tp.Place.Latitude, tp.Place.Longitude },
+                    Category = tp.Place.PlaceTypes?.FirstOrDefault(pt => pt.Type?.Name != null)?.Type.Name ?? "unknown"
+                }).ToList();
+            }
 
-            // Create the request using places from travel
-            var pathRequest = new PathOptimizationRequestDto
+            if(request.MaxAttractions > request.Attractions.Count)
             {
-                Attractions = attractions,
-                UserLocation = userLocation,
-                MaxBudget = config.MaxBudget,
-                MaxTime = config.MaxTime,
-                RequiredCategory = config.RequiredCategory,
-                MaxAttractions = config.MaxAttractions
-            };
+                request.MaxAttractions = request.Attractions.Count;
+            }
+
+            // If user location not specified, use the first place's location
+            if (request.UserLocation == null || request.UserLocation.Length != 2)
+            {
+                var firstPlace = travel.TravelPlaces.FirstOrDefault()?.Place;
+
+                if (firstPlace != null)
+                {
+                    request.UserLocation = new double[] { firstPlace.Latitude, firstPlace.Longitude };
+                }
+
+                else
+                {
+                    request.UserLocation = new double[] { 41.0082, 28.9784 };
+                }
+            }
+
+            // If constraints not specified, create default ones
+            if (request.Constraints == null || !request.Constraints.Any())
+            {
+                request.Constraints = new Dictionary<string, ConstraintDto>
+                {
+                    ["budget"] = new ConstraintDto
+                    {
+                        Name = "budget",
+                        CurrentValue = 0.0,
+                        MaxValue = 700.0,
+                        PenaltyWeight = 1.0
+                    },
+                    ["time"] = new ConstraintDto
+                    {
+                        Name = "time",
+                        CurrentValue = 0.0,
+                        MaxValue = 480.0,
+                        PenaltyWeight = 1.0
+                    },
+                    ["category_diversity"] = new ConstraintDto
+                    {
+                        Name = "category_diversity",
+                        CurrentValue = new List<string>(),
+                        PenaltyWeight = 0.5
+                    }
+                };
+            }
 
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-                WriteIndented = true
+                WriteIndented = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
 
             var response = await httpClient.PostAsJsonAsync(
-                $"{optimizationApiUrl}/spea2",
-                pathRequest,
+                $"{optimizationApiUrl}/generate-paths",
+                request,
                 jsonOptions);
 
             response.EnsureSuccessStatusCode();
 
-            return await response.Content.ReadFromJsonAsync<List<PathResponseDto>>();
+            return await response.Content.ReadFromJsonAsync<List<PathGenerationResponseDto>>();
         }
 
         private double CalculateEstimatedBudget(Place place)

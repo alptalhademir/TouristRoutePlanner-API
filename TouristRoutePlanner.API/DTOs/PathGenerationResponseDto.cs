@@ -2,7 +2,7 @@
 
 namespace TouristRoutePlanner.API.DTOs
 {
-    public class PathResponseDto
+    public class PathGenerationResponseDto
     {
         [JsonPropertyName("attractions")]
         public List<AttractionDto> Attractions { get; set; }
@@ -21,11 +21,5 @@ namespace TouristRoutePlanner.API.DTOs
 
         [JsonPropertyName("violations")]
         public double Violations { get; set; }
-
-        [JsonPropertyName("strength")]
-        public double Strength { get; set; }
-
-        [JsonPropertyName("raw_fit")]
-        public double RawFit { get; set; }
     }
 }

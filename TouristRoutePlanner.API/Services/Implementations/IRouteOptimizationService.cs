@@ -7,6 +7,6 @@ namespace TouristRoutePlanner.API.Services.Implementations
     {
         Task<List<RouteOptimizationResponseDto>> OptimizeRouteAsync(Guid travelId, Guid userId, OptimizationConstraints constraints);
 
-        Task<List<PathResponseDto>> AlternativeOptimizePathAsync(Guid travelId, Guid userId, double[] userLocation, OptimizationConfig config);
+        Task<List<PathGenerationResponseDto>> GeneratePathsAsync(Guid travelId, Guid userId, PathGenerationRequestDto request);
     }
 }

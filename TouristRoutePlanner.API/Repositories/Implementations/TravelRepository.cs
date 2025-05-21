@@ -44,6 +44,8 @@ namespace TouristRoutePlanner.API.Repositories.Implementations
             return await dbContext.Travels
                 .Include(t => t.TravelPlaces)
                     .ThenInclude(tp => tp.Place)
+                        .ThenInclude(p => p.PlaceTypes)
+                            .ThenInclude(pt => pt.Type)
                 .FirstOrDefaultAsync(t => t.Id == travelId && t.UserId == userId);
         }
 

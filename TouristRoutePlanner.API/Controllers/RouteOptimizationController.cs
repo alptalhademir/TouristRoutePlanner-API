@@ -38,10 +38,10 @@ namespace TouristRoutePlanner.API.Controllers
             return Ok(optimizedRoute);
         }
 
-        [HttpPost("{travelId:guid}/optimize-path")]
-        public async Task<ActionResult<List<PathResponseDto>>> AlternativeOptimizePath(
-            Guid travelId,
-            [FromBody] OptimizationConfig request)
+        // Optimization endpoint
+        [HttpPost("{travelId:guid}/generate-paths")]
+        public async Task<ActionResult<List<PathGenerationResponseDto>>> GeneratePaths(Guid travelId, 
+            [FromBody] PathGenerationRequestDto request)
         {
             try
             {
@@ -49,32 +49,36 @@ namespace TouristRoutePlanner.API.Controllers
                 if (string.IsNullOrEmpty(userId))
                     return Unauthorized(new { message = "Please login to proceed." });
 
-                if (request.UserLocation == null || request.UserLocation.Length != 2)
-                    return BadRequest(new { message = "Valid user location is required." });
+                // Set default mode if not provided
+                if (string.IsNullOrEmpty(request.Mode))
+                    request.Mode = "balanced";
 
-                var result = await routeOptimizationService.AlternativeOptimizePathAsync(
+                // Validate max_attractions
+                if (request.MaxAttractions <= 0)
+                    return BadRequest(new { message = "max_attractions must be positive." });
+
+                var result = await routeOptimizationService.GeneratePathsAsync(
                     travelId,
                     Guid.Parse(userId),
-                    request.UserLocation,
-                    new OptimizationConfig
-                    {
-                        MaxBudget = request.MaxBudget,
-                        MaxTime = request.MaxTime,
-                        RequiredCategory = request.RequiredCategory,
-                        MaxAttractions = request.MaxAttractions
-                    });
+                    request);
 
                 return Ok(result);
             }
+
             catch (KeyNotFoundException ex)
             {
                 return NotFound(new { message = ex.Message });
             }
-            catch (Exception)
+
+            catch (HttpRequestException ex)
             {
-                return StatusCode(500, new { message = "Error optimizing path" });
+                return StatusCode(500, new { message = $"Error communicating with optimization service: {ex.Message}" });
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error generating paths: {ex.Message}" });
             }
         }
-
     }
 }
